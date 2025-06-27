@@ -1,30 +1,38 @@
-// src/ReportPage.jsx
 import React, { useState } from "react";
 
 export default function ReportPage() {
-  const [fileName, setFileName] = useState(null);
+  const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setFileName(file.name);
-    setUploading(true);
-    setProgress(10);
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      alert("Please select a file.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
+
+    setUploading(true);
+    setProgress(30);
 
     try {
       const res = await fetch("https://aub2connect-report.onrender.com/upload", {
         method: "POST",
         body: formData,
       });
+
       if (!res.ok) throw new Error("Upload failed");
+
       setProgress(100);
+      alert("✅ Upload successful!");
     } catch (err) {
-      alert("Upload failed. Please try again.");
+      alert("❌ Upload failed. Please try again.");
       setProgress(0);
     } finally {
       setUploading(false);
@@ -35,34 +43,11 @@ export default function ReportPage() {
   return (
     <div className="min-h-screen bg-[#0e1c2f] text-white p-6">
       <header className="text-center mb-10">
-        <h1 className="text-3xl font-bold">AuB2Connect Report Viewer</h1>
-        <p className="text-gray-400 mt-2">Preview your event analytics and download full report</p>
+        <h1 className="text-3xl font-bold">AuB2Connect Report System</h1>
+        <p className="text-gray-400 mt-2">Upload Excel → Generate Insightful Report</p>
       </header>
 
       <section className="flex flex-col items-center gap-6">
-        <div className="bg-[#182b45] p-6 rounded-xl w-full max-w-xl shadow-md">
-          <h2 className="text-xl font-semibold mb-2">Step 1: Upload Your Excel File</h2>
-          <input
-            type="file"
-            accept=".xlsx"
-            className="text-white"
-            onChange={handleUpload}
-          />
-          {fileName && (
-            <div className="text-sm text-green-400 mt-2 w-full">
-              <p>{uploading ? "Uploading..." : `Uploaded: ${fileName}`}</p>
-              {uploading && (
-                <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
-                  <div
-                    className="bg-green-400 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
         <div className="w-full max-w-5xl aspect-video">
           <iframe
             className="w-full h-full rounded-xl shadow-lg"
@@ -73,9 +58,35 @@ export default function ReportPage() {
           ></iframe>
         </div>
 
+        <input
+          type="file"
+          accept=".xlsx"
+          onChange={handleFileChange}
+          className="text-black mt-4"
+        />
+
         <button
-          className="mt-4 bg-yellow-400 text-black px-6 py-3 rounded-xl text-lg font-semibold hover:bg-yellow-500 transition"
-          onClick={() => window.open("https://aub2connect-report.onrender.com/download", "_blank")}
+          onClick={handleUpload}
+          disabled={uploading}
+          className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition"
+        >
+          {uploading ? "Uploading..." : "Upload Excel File"}
+        </button>
+
+        {progress > 0 && (
+          <div className="w-full max-w-sm bg-gray-700 rounded-full h-4 mt-2">
+            <div
+              className="bg-green-400 h-4 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        )}
+
+        <button
+          onClick={() =>
+            window.open("https://aub2connect-report.onrender.com/download", "_blank")
+          }
+          className="mt-6 bg-yellow-400 text-black px-6 py-3 rounded-xl text-lg font-semibold hover:bg-yellow-500 transition"
         >
           Download Full Report (PDF)
         </button>
