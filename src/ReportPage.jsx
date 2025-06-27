@@ -1,6 +1,37 @@
-import React from "react";
+// src/ReportPage.jsx
+import React, { useState } from "react";
 
 export default function ReportPage() {
+  const [fileName, setFileName] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setFileName(file.name);
+    setUploading(true);
+    setProgress(10);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("https://aub2connect-report.onrender.com/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      setProgress(100);
+    } catch (err) {
+      alert("Upload failed. Please try again.");
+      setProgress(0);
+    } finally {
+      setUploading(false);
+      setTimeout(() => setProgress(0), 3000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0e1c2f] text-white p-6">
       <header className="text-center mb-10">
@@ -9,6 +40,29 @@ export default function ReportPage() {
       </header>
 
       <section className="flex flex-col items-center gap-6">
+        <div className="bg-[#182b45] p-6 rounded-xl w-full max-w-xl shadow-md">
+          <h2 className="text-xl font-semibold mb-2">Step 1: Upload Your Excel File</h2>
+          <input
+            type="file"
+            accept=".xlsx"
+            className="text-white"
+            onChange={handleUpload}
+          />
+          {fileName && (
+            <div className="text-sm text-green-400 mt-2 w-full">
+              <p>{uploading ? "Uploading..." : `Uploaded: ${fileName}`}</p>
+              {uploading && (
+                <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
+                  <div
+                    className="bg-green-400 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="w-full max-w-5xl aspect-video">
           <iframe
             className="w-full h-full rounded-xl shadow-lg"
@@ -21,7 +75,7 @@ export default function ReportPage() {
 
         <button
           className="mt-4 bg-yellow-400 text-black px-6 py-3 rounded-xl text-lg font-semibold hover:bg-yellow-500 transition"
-          onClick={() => window.open("https://yourdomain.com/download/report.pdf", "_blank")}
+          onClick={() => window.open("https://aub2connect-report.onrender.com/download", "_blank")}
         >
           Download Full Report (PDF)
         </button>
